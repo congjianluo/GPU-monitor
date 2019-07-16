@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="static/example_img.png" width="550"/>
+  <img src="static/example_img.png" width="1000"/>
 </p>
 
 # 集群GPU状态监管工具 
