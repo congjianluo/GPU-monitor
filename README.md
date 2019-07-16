@@ -1,6 +1,4 @@
-<p align="center">
-  <img src="static/example_img.png" width="1000"/>
-</p>
+![image](static/example_img.png)
 
 # 集群GPU状态监管工具 
 采用Python-Flask框架编写，可以非常快速简单地部署在服务器上。

@@ -1,0 +1,10 @@
+[
+  {
+    "server-name": "Example",
+    "hostname": "example.com",
+    "port": 22,
+    "username": "server username",
+    "password": "server password",
+    "use": 1
+  }
+]
