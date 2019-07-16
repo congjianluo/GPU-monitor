@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SmileLab GPU</title>
+    <script src="/static/vue.js"></script>
+    <script src="/static/vue-router.js"></script>
+    <script src="/static/axios.js"></script>
+    {#    element-ui#}
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="/static/ui/index.css">
+    <!-- 引入组件库 -->
+    <script src="/static/ui/index.js"></script>
+    <style>
+        .my-font {
+            padding: 0;
+            font-size: 13px;
+            color: #606266;
+            display: inline-block;
+            vertical-align: middle;
+            margin: 3px 0 0 0;
+            line-height: 1;
+        }
+
+        .my-divider {
+            display: block;
+            height: 1px;
+            width: 100%;
+            margin: 12px 0;
+            background-color: #DCDFE6;
+            position: relative;
+        }
+
+        body {
+            font-size: 15px;
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+    <el-alert
+            title="SmileLab GPU"
+            type="success"
+            effect="dark" :closable="false">
+    </el-alert>
+    <div style="display: flex;justify-content: space-between">
+        <div style="margin: 15px 5px;">
+            <el-button type="primary" icon="el-icon-refresh" plain size="mini" v-on:click="updateData">Reload
+            </el-button>
+        </div>
+        <p>Update Time: &nbsp; {{ update_time }}</p>
+    </div>
+    {#                添加返回顶部#}
+    <el-button type="primary" icon="el-icon-top" v-on:click="window.scrollTo(0,0)"
+               style="position: fixed;right: 5%;bottom: 100px;">
+        Top
+    </el-button>
+    <div style="width: 70%;margin: 40px auto">
+        <el-tabs type="border-card" :stretch="true">
+            <el-tab-pane :label="machine['name']" v-for="machine in machines">
+                {#                {{ machine }}#}
+                <div v-for="(status,index) in machine['status']" style="width: 90%;margin:auto">
+                    GPU:{{ index }}&nbsp;&nbsp;&nbsp;
+                    Temperature: {{ status['gpu_temp'] }}℃
+                    <br>
+                    <p class="my-font">Used/Total Memory: {{ status['mem_used'] }}MB/{{ status['mem_total'] }}MB&nbsp;&nbsp;&nbsp;</p>
+                    <div style="display: flex;">
+                        <div style="width: 180px;">
+                            <p class="my-font">
+                                Memory-Usage:{{ (status['mem_used']/status['mem_total']*100).toFixed(0) }}%</p>
+                        </div>
+                        <div style="width: 100%;margin-top: 5px;">
+                            <el-progress :stroke-width="6"
+                                         :percentage="(status['mem_used']/status['mem_total']*100).toFixed(0)"
+                                         :color="getColor(status['mem_used']/status['mem_total']*100)" status="text">
+                            </el-progress>
+                        </div>
+                    </div>
+                    <div style="display: flex;">
+                        <div>
+                            <el-progress width="90" type="circle" :percentage="(status['gpu_util']*100).toFixed(0)"
+                                         style="margin-top: 10px;" :color="getColor(status['gpu_util']*100)"
+                                         status="text">
+                                Gpu-Usage:<br>{{ (status['gpu_util']*100).toFixed(0) }}%
+                            </el-progress>
+                        </div>
+                        <div style="width: 80%;margin: auto">
+                            <p v-for="(proc,i) in status['proc']" style="font-size: 12px;">
+                                Process{{ i }}: {{ proc['user'] }} - {{ proc['mem'] }} MB <br> {{ proc['command'] }}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="my-divider"></div>
+                </div>
+            </el-tab-pane>
+        </el-tabs>
+    </div>
+</div>
+<script>
+    var app = new Vue({
+            el: '#app',
+            data: {
+                loading: true,
+                message: 'Hello Vue!',
+                machines: [],
+                update_time: 0,
+            },
+            created: function () {
+                this.getData();
+            },
+            methods: {
+                getColor: function (percent) {
+                    {#console.log(percent);#}
+                    if (percent > 80) {
+                        return "red";
+                    }
+                    if (percent > 50)
+                        return "rgb(247, 186, 42)";
+                    return "#67c23a";
+                },
+                getData: function () {
+                    let that = this;
+                    axios.get("/get_status")
+                        .then(function (res) {
+                            {#console.log(res);#}
+                            that.loading = false;
+                            that.machines = res.data["data"];
+                            that.update_time = new Date(parseInt(res.data["update_time"]) * 1000);
+                        })
+                        .catch(function (err) {
+                            alert("Something not work...")
+                        });
+                },
+                updateData: function () {
+                    let that = this;
+                    axios.get("/get_status")
+                        .then(function (res) {
+                            console.log(new Date(parseInt(res.data["update_time"])));
+                            console.log(that.update_time);
+                            if (new Date(parseInt(res.data["update_time"]) * 1000).getTime()
+                                === that.update_time.getTime()) {
+                                that.$message.warning("nothing updated!(updated per two minutes)")
+                            } else {
+                                that.$message.success("updated!")
+                            }
+                            that.loading = false;
+                            that.machines = res.data["data"];
+                            that.update_time = new Date(parseInt(res.data["update_time"]) * 1000);
+                        })
+                        .catch(function (err) {
+                            alert("Something not work...")
+                        });
+                }
+            }
+        }
+    );
+</script>
+</body>
+</html>
