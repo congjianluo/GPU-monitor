@@ -16,7 +16,10 @@ def owner(ssh, pid):
         # get UID via stat call
         stdin, stdout, stderr = ssh.exec_command(pid_query)
         # look up the username from uid
-        pid_out = stdout.read().strip().split(" ")
+        pid_out = stdout.read()
+        if isinstance(pid_out, bytes):
+            pid_out = pid_out.decode()
+        pid_out = pid_out.strip().split(" ")
         pid_out = remove_values_from_list(pid_out, "")
         username = pid_out[1].strip()
         command = " "
@@ -122,7 +125,8 @@ def get_gpu_utils(hostname, port, username, password):
 
     stdin, stdout, stderr = ssh.exec_command(gpu_info_cmd)
     out = stdout.read()
-
+    if isinstance(out, bytes):
+        out = out.decode()
     gpu_infos = out.strip().split('\n')
     gpu_infos = map(lambda x: x.split(', '), gpu_infos)
     gpu_infos = [{'index': x[0],
